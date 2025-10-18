@@ -33,6 +33,39 @@ gcloud config set run/region europe-west1
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com aiplatform.googleapis.com
 ```
 
+## Run the Agent Locally
+
+You can run the ADK agent locally for development and testing. The agent needs to know the URL of your Ollama server, which can be configured in two ways:
+
+### 1. Using an environment variable
+
+You can set the `OLLAMA_API_BASE` environment variable when you run the server.
+
+```bash
+OLLAMA_API_BASE="<your_ollama_server_url>" python "adk agent/server.py"
+```
+
+If this variable is not set, the agent will default to `http://localhost:10010`.
+
+### 2. Using a `.env` file
+
+Alternatively, you can create a `.env` file in the root of the project directory and add the server URL there.
+
+1.  Create a file named `.env` in the project root.
+2.  Add the following line to the file:
+
+    ```
+    OLLAMA_API_BASE="<your_ollama_server_url>"
+    ```
+
+3.  Run the server:
+
+    ```bash
+    python "adk agent/server.py"
+    ```
+
+The agent will automatically load the URL from the `.env` file.
+
 ## Deploy Gemma Backend
 
 ```bash
@@ -91,6 +124,7 @@ gcloud run deploy production-adk-agent \
     --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID \
     --set-env-vars GOOGLE_CLOUD_LOCATION=europe-west1 \
     --set-env-vars GEMMA_MODEL_NAME=gemma3:4b \
+    --set-env-vars VEO_MODEL_NAME=veo-3.0-fast-generate-001 \
     --set-env-vars OLLAMA_API_BASE=$OLLAMA_URL
 ```
 

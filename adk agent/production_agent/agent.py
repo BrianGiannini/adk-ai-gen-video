@@ -22,7 +22,7 @@ except Exception:
     # If no credentials available, continue without setting project
     pass
 
-os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "europe-west1")
+os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 # Set up Cloud Logging
@@ -34,6 +34,9 @@ logger = logging_client.logger("production-adk-agent")
 gemma_model_name = os.getenv("GEMMA_MODEL_NAME", "gemma3:4b")  # Gemma model name
 api_base = os.getenv("OLLAMA_API_BASE", "http://localhost:10010")  # Location of Ollama server
 
+from production_agent.tools.veo_tool import generate_video_and_upload
+
+
 # Production Gemma Agent - GPU-accelerated conversational assistant
 # 1. Connects to your deployed Gemma backend via LiteLlm
 # 2. Creates a simple conversational agent
@@ -41,12 +44,13 @@ api_base = os.getenv("OLLAMA_API_BASE", "http://localhost:10010")  # Location of
 production_agent = Agent(
     model=LiteLlm(model=f"ollama_chat/{gemma_model_name}", api_base=api_base),
     name="production_agent",
-    description="A production-ready conversational assistant powered by GPU-accelerated Gemma.",
+    description="A production-ready conversational assistant powered by GPU-accelerated Gemma that can generate videos.",
     instruction="""
-        You are a helpful assistant that can writing prompts for video generation.
+        You are a helpful assistant that can generate videos. When a user asks you to generate a video, you should call the `generate_video_and_upload` tool with the user's prompt.
+        You can also help users write better prompts for video generation.
     """,
     
-    tools=[],  # Gemma focuses on conversational capabilities
+    tools=[generate_video_and_upload],
 )
 
 # Set as root agent
