@@ -18,9 +18,22 @@ app_args = {"agents_dir": AGENT_DIR, "web": True}
 # Create FastAPI app with ADK integration
 app: FastAPI = get_fast_api_app(**app_args)
 
-# Set up Cloud Logging
-logging_client = google_cloud_logging.Client()
-logger = logging_client.logger("production-adk-agent-feedback")
+# Set up Cloud Logging lazily
+_logging_client = None
+_logger = None
+
+def get_logger():
+    """Get or create the Cloud Logging logger."""
+    global _logging_client, _logger
+    if _logger is None:
+        try:
+            _logging_client = google_cloud_logging.Client()
+            _logger = _logging_client.logger("production-adk-agent-feedback")
+        except Exception as e:
+            print(f"Warning: Could not initialize Cloud Logging: {e}")
+            import logging
+            _logger = logging.getLogger("production-adk-agent-feedback")
+    return _logger
 
 # Update app metadata
 app.title = "Production ADK Agents - Lab 3"
@@ -55,7 +68,15 @@ def collect_feedback(feedback: Feedback) -> dict[str, str]:
     # In a production environment, you would typically log this to
     # Cloud Logging, store in a database, or send to analytics service
     print(f"Received feedback: {feedback}")
-    logger.log_struct(feedback.model_dump(), severity="INFO")
+    
+    logger = get_logger()
+    try:
+        if hasattr(logger, 'log_struct'):
+            logger.log_struct(feedback.model_dump(), severity="INFO")
+        else:
+            logger.info(feedback.model_dump())
+    except Exception as e:
+        print(f"Error logging feedback: {e}")
     
     return {"status": "success", "message": "Feedback received successfully"}
 

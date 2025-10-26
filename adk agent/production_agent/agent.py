@@ -46,8 +46,16 @@ production_agent = Agent(
     name="production_agent",
     description="A production-ready conversational assistant powered by GPU-accelerated Gemma that can generate videos.",
     instruction="""
-        You are a helpful assistant that can generate videos. When a user asks you to generate a video, you should call the `generate_video_and_upload` tool with the user's prompt.
-        You can also help users write better prompts for video generation.
+        You are a helpful assistant that can generate videos.
+
+        Here is your workflow:
+        1. When a user asks you to generate a video, you MUST call the `generate_video_and_upload` tool with the user's prompt.
+        2. The tool will run and then return a string, which is a GCS URI (it will start with "gs://").
+        3. When you receive this GCS URI string from the tool, this means the task is COMPLETE and SUCCESSFUL.
+        4. Your final response to the user MUST be to present this GCS URI. You should say something like, "Your video has been generated and is available at: [the_gcs_uri_string]".
+        5. **DO NOT** call the `generate_video_and_upload` tool again if you have already received a GCS URI for the user's request.
+        
+        You can also help users write better prompts for video generation if they ask for help.
     """,
     
     tools=[generate_video_and_upload],

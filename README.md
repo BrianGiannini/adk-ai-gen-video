@@ -111,21 +111,25 @@ OLLAMA_API_BASE=$OLLAMA_URL
 EOF
 
 # Deploy the ADK based AI agent to Cloud Run with ADK webUI 
+export PROJECT_ID="sanguinax-playground"
 
+# Build with correct project
+gcloud builds submit \
+    --project $PROJECT_ID \
+    --tag gcr.io/$PROJECT_ID/production-adk-agent
+
+# Deploy
 gcloud run deploy production-adk-agent \
-    --source . \
-    --region europe-west1 \
+    --project sanguinax-playground \
+    --image gcr.io/sanguinax-playground/production-adk-agent \
+    --region us-central1 \
     --allow-unauthenticated \
     --memory 4Gi \
     --cpu 2 \
     --max-instances 1 \
     --concurrency 50 \
-    --timeout 300 \
-    --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID \
-    --set-env-vars GOOGLE_CLOUD_LOCATION=europe-west1 \
-    --set-env-vars GEMMA_MODEL_NAME=gemma3:4b \
-    --set-env-vars VEO_MODEL_NAME=veo-3.0-fast-generate-001 \
-    --set-env-vars OLLAMA_API_BASE=$OLLAMA_URL
+    --timeout 500 \
+    --set-env-vars GOOGLE_CLOUD_PROJECT=sanguinax-playground,GOOGLE_CLOUD_LOCATION=us-central1,GEMMA_MODEL_NAME=gemma3:4b,VEO_MODEL_NAME=veo-3.1-generate-preview,OLLAMA_API_BASE=https://ollama-gemma3-4b-gpu-870622303377.us-central1.run.app,GCS_BUCKET_NAME=ai-veo-videos-us
 ```
 
 ## Test Your Agent's health

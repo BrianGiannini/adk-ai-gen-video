@@ -11,14 +11,19 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy all files
-COPY . .
+# Copy dependency files first
+COPY pyproject.toml ./
+COPY uv.lock* ./
 
-# Install Python dependencies
-RUN uv sync
+# Install Python dependencies WITHOUT creating a virtual environment
+# This is key: use --no-cache and ensure we're using system Python
+RUN uv sync --no-dev --no-cache
+
+# Copy application code
+COPY . .
 
 # Expose port for the application
 EXPOSE 8080
 
-# Run the application
-CMD ["uv", "run", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8080"]
+# Use uv run - it's faster and handles the environment correctly
+CMD ["uv", "run", "--no-dev", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "8080"]
