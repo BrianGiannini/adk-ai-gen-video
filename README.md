@@ -27,7 +27,7 @@ Let's first explore the agent we'll be deploying:
 # Set your Google Cloud project
 export PROJECT_ID="your-project-id"
 gcloud config set project $PROJECT_ID
-gcloud config set run/region europe-west1
+gcloud config set run/region us-central1
 
 # Enable APIs
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com aiplatform.googleapis.com
@@ -98,14 +98,14 @@ OLLAMA_HOST=<Cloud Run SERVICE URL generated above> ollama run gemma3:4b
 cd hackathon-cloudrun/adk-agent
 
 export OLLAMA_URL=$(gcloud run services describe ollama-gemma3-4b-gpu \
-  --region europe-west1 \
+  --region us-central1 \
   --format='value(status.url)')
 
 # Create environment file
 
 cat > .env << EOF
 GOOGLE_CLOUD_PROJECT=$PROJECT_ID
-GOOGLE_CLOUD_LOCATION=europe-west1
+GOOGLE_CLOUD_LOCATION=us-central1
 GEMMA_MODEL_NAME=gemma3:4b
 OLLAMA_API_BASE=$OLLAMA_URL
 EOF
@@ -129,7 +129,7 @@ gcloud run deploy production-adk-agent \
     --max-instances 1 \
     --concurrency 50 \
     --timeout 500 \
-    --set-env-vars GOOGLE_CLOUD_PROJECT=sanguinax-playground,GOOGLE_CLOUD_LOCATION=us-central1,GEMMA_MODEL_NAME=gemma3:4b,VEO_MODEL_NAME=veo-3.1-generate-preview,OLLAMA_API_BASE=https://ollama-gemma3-4b-gpu-870622303377.us-central1.run.app,GCS_BUCKET_NAME=ai-veo-videos-us
+    --set-env-vars GOOGLE_CLOUD_PROJECT=sanguinax-playground,GOOGLE_CLOUD_LOCATION=us-central1,GEMMA_MODEL_NAME=gemma3:4b,VEO_MODEL_NAME=veo-3.1-fast-generate-preview,OLLAMA_API_BASE=https://ollama-gemma3-4b-gpu-870622303377.us-central1.run.app,GCS_BUCKET_NAME=ai-veo-videos-us
 ```
 
 ## Test Your Agent's health
@@ -137,7 +137,7 @@ gcloud run deploy production-adk-agent \
 ```bash
 # Get service URL
 export SERVICE_URL=$(gcloud run services describe production-adk-agent \
-    --region=europe-west1 \
+    --region=us-central1 \
     --format='value(status.url)')
 
 # Test health endpoint

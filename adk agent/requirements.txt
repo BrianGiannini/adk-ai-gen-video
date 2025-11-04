@@ -1,0 +1,9 @@
+google-adk==1.17.0
+python-dotenv==1.1.0
+httpx>=0.25.0
+google-auth>=2.23.0
+locust==2.37.10
+litellm>=1.0.0
+google-cloud-aiplatform>=1.55.0
+google-cloud-storage>=2.14.0
+google-cloud-language
