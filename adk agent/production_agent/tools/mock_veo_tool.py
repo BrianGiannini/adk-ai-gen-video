@@ -23,8 +23,8 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
         print("  [MOCK] Detected 'FAIL' in prompt. Simulating a generation error.")
         print("="*30 + "\n")
         
-        # This error string MUST match what your real tool returns
-        # and what your 'video_worker_agent' expects in Phase 2
+        # This error string MUST match what the real tool returns
+        # and what the 'video_worker_agent' expects in Phase 2
         return "Video generation failed: Mock error triggered by 'FAIL' keyword."
 
     # If not failing, simulate a short "generation" time

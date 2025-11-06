@@ -21,8 +21,9 @@ logging_client = google_cloud_logging.Client()
 logger = logging_client.logger("production-adk-agent")
 
 # --- Model Definitions ---
-PRO_MODEL = "gemini-2.5-pro"
-FLASH_MODEL = "gemini-2.5-flash" 
+load_dotenv()
+PRO_MODEL = os.getenv("PRO_MODEL", "gemini-2.5-pro")
+FLASH_MODEL = os.getenv("FLASH_MODEL", "gemini-2.5-flash") 
 
 # --- Import ALL our tools ---
 from production_agent.tools.mock_veo_tool import generate_video_and_prompt_file
@@ -31,7 +32,7 @@ from production_agent.tools.safety_tool import check_prompt_safety
 
 # --- AGENT CHAIN ---
 
-# 1. Safety Check Agent (Unchanged)
+# 1. Safety Check Agent
 safety_check_agent = Agent(
     model=LiteLlm(model=FLASH_MODEL),
     name="safety_check_agent",
@@ -93,7 +94,7 @@ decision_agent = Agent(
     tools=[],
 )
 
-# 3. Worker Agent (Unchanged)
+# 3. Worker Agent
 video_worker_agent = Agent(
     model=LiteLlm(model=FLASH_MODEL),
     name="video_worker_agent",
@@ -114,7 +115,7 @@ video_worker_agent = Agent(
     tools=[generate_video_and_prompt_file],
 )
 
-# 4. Confirmation Agent (Unchanged)
+# 4. Confirmation Agent
 confirmation_agent = Agent(
     model=LiteLlm(model=FLASH_MODEL),
     name="confirmation_agent",
@@ -128,7 +129,7 @@ confirmation_agent = Agent(
     tools=[],
 )
 
-# 5. Orchestrator Agent (Unchanged)
+# 5. Orchestrator Agent
 orchestrator_agent = SequentialAgent(
     name="orchestrator_agent",
     sub_agents=[

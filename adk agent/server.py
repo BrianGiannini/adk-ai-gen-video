@@ -1,5 +1,12 @@
 import os
+import sys
 from typing import Literal
+
+# This fixes the 'from agent...' and 'from production_agent...' import errors
+# It adds the current directory to the Python path
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPT_DIR not in sys.path:
+    sys.path.append(SCRIPT_DIR)
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -10,15 +17,19 @@ from pydantic import BaseModel
 # Load environment variables from .env file
 load_dotenv()
 
+# AGENT_DIR points to the directory containing this server.py file
 AGENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# App arguments for ADK - using in-memory session service for simplicity
-app_args = {"agents_dir": AGENT_DIR, "web": True}
+# App arguments for ADK
+app_args = {
+    "agents_dir": AGENT_DIR,
+    "web": True,
+    "session_service_uri": "sqlite:///:memory:", 
+}
 
 # Create FastAPI app with ADK integration
 app: FastAPI = get_fast_api_app(**app_args)
 
-# Set up Cloud Logging lazily
 _logging_client = None
 _logger = None
 
@@ -36,14 +47,12 @@ def get_logger():
     return _logger
 
 # Update app metadata
-app.title = "Production ADK Agents - Lab 3"
-app.description = "Dual-agent setup: Gemma (conversational) and Llama (with tools for weather and tips)"
+app.title = "Veo AI Video Generation Agent"
+app.description = "A multi-agent workflow that uses a safety moderation layer to generate videos with the Veo API."
 app.version = "1.0.0"
-
 
 class Feedback(BaseModel):
     """Represents user feedback for a conversation."""
-
     score: int | float
     text: str | None = ""
     invocation_id: str
@@ -51,24 +60,10 @@ class Feedback(BaseModel):
     service_name: Literal["production-adk-agent"] = "production-adk-agent"
     user_id: str = ""
 
-
 @app.post("/feedback")
 def collect_feedback(feedback: Feedback) -> dict[str, str]:
-    """Collect and log user feedback.
-
-    This endpoint allows users to provide feedback on their interactions
-    with the agent, which can be used for monitoring and improvement.
-
-    Args:
-        feedback: The feedback data including score, text, and metadata
-
-    Returns:
-        Success message confirming feedback was received
-    """
-    # In a production environment, you would typically log this to
-    # Cloud Logging, store in a database, or send to analytics service
+    """Collect and log user feedback."""
     print(f"Received feedback: {feedback}")
-    
     logger = get_logger()
     try:
         if hasattr(logger, 'log_struct'):
@@ -83,14 +78,7 @@ def collect_feedback(feedback: Feedback) -> dict[str, str]:
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
-    """Health check endpoint for monitoring and load balancing.
-
-    This endpoint is used by Cloud Run and load balancers to verify
-    that the service is healthy and ready to receive traffic.
-
-    Returns:
-        Health status and service information
-    """
+    """Health check endpoint for monitoring and load balancing."""
     return {
         "status": "healthy", 
         "service": "production-adk-agent",
@@ -100,11 +88,7 @@ def health_check() -> dict[str, str]:
 
 @app.get("/")
 def root() -> dict[str, str]:
-    """Root endpoint with service information.
-
-    Returns:
-        Basic information about the service
-    """
+    """Root endpoint with service information."""
     return {
         "service": "Production ADK Agent - Lab 3",
         "description": "Business intelligence and strategic planning agent",
@@ -117,5 +101,4 @@ def root() -> dict[str, str]:
 # Main execution for local development
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8080, log_level="info")

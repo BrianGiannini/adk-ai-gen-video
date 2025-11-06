@@ -25,12 +25,10 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
     location = os.environ.get("GOOGLE_CLOUD_LOCATION")
     
-    # --- UPDATED: Quality-based model selection with defaults ---
     if quality == "fast":
         model_name = os.getenv("VEO_FAST_MODEL", "veo-3.1-fast-generate-preview")
     else:
         model_name = os.getenv("VEO_HQ_MODEL", "veo-3.1-generate-preview")
-    # --- END UPDATE ---
         
     bucket_name = os.environ.get("GCS_BUCKET_NAME")
     
@@ -54,7 +52,7 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
     # 3. Start video generation
     print(f"Starting video generation job for: '{final_prompt}' (Quality: {quality})")
     operation = client.models.generate_videos(
-        model=model_name, # <-- Uses the quality-based model name
+        model=model_name,
         prompt=final_prompt,
         config=types.GenerateVideosConfig(
             output_gcs_uri=output_gcs_uri_prefix, 
@@ -72,7 +70,7 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
 
     print("Operation finished. Accessing response...")
     
-    # --- Your original error handling ---
+    # --- Original error handling ---
     if not operation.result or not operation.result.generated_videos:
          error_details = "Unknown error or no videos generated (check safety filters)."
          if hasattr(operation, 'response') and operation.response:

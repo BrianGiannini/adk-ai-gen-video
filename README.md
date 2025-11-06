@@ -7,16 +7,16 @@ Let's first explore the agent we'll be deploying:
 #### Agent Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   User Request  │ -> │   ADK Agent     │ -> │  Gemma Backend  │
-│                 │    │  (Cloud Run)    │    │ (Cloud Run+GPU) │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+┌─────────────────┐    ┌─────────────────┐
+│   User Request  │ -> │   ADK Agent     │
+│                 │    │  (Cloud Run)    │
+└─────────────────┘    └─────────────────┘
                               │
                               v
                        ┌─────────────────┐
-                       │ FastAPI Server  │
-                       │ Health Checks   │
-                       │─────────────────┘
+                       │  Gemini API     │
+                       │                 │
+                       └─────────────────┘
 ```
 
 #### Key Components
@@ -35,83 +35,46 @@ gcloud services enable run.googleapis.com cloudbuild.googleapis.com aiplatform.g
 
 ## Run the Agent Locally
 
-You can run the ADK agent locally for development and testing. The agent needs to know the URL of your Ollama server, which can be configured in two ways:
+You can run the ADK agent locally for development and testing. The agent uses Google Cloud services and needs to be configured with the correct project and model information.
 
-### 1. Using an environment variable
+### 1. Using a `.env` file
 
-You can set the `OLLAMA_API_BASE` environment variable when you run the server.
+Create a `.env` file in the `adk agent` directory and add the following variables:
 
-```bash
-OLLAMA_API_BASE="<your_ollama_server_url>" python "adk agent/server.py"
+```
+GOOGLE_CLOUD_PROJECT="your-project-id"
+GOOGLE_CLOUD_LOCATION="us-central1"
+PRO_MODEL="gemini-2.5-pro"
+FLASH_MODEL="gemini-2.5-flash"
+VEO_FAST_MODEL="veo-3.1-fast-generate-preview"
+VEO_HQ_MODEL="veo-3.1-generate-preview"
+GCS_BUCKET_NAME="your-gcs-bucket-name"
 ```
 
-If this variable is not set, the agent will default to `http://localhost:10010`.
-
-### 2. Using a `.env` file
-
-Alternatively, you can create a `.env` file in the root of the project directory and add the server URL there.
-
-1.  Create a file named `.env` in the project root.
-2.  Add the following line to the file:
-
-    ```
-    OLLAMA_API_BASE="<your_ollama_server_url>"
-    ```
-
-3.  Run the server:
-
-    ```bash
-    python "adk agent/server.py"
-    ```
-
-The agent will automatically load the URL from the `.env` file.
-
-## Deploy Gemma Backend
+### 2. Run the server
 
 ```bash
-cd hackathon-cloudrun/ollama-backend
-
-gcloud run deploy ollama-gemma3-4b-gpu \
-  --source . \
-  --concurrency 4 \
-  --cpu 8 \
-  --set-env-vars OLLAMA_NUM_PARALLEL=4 \
-  --gpu 1 \
-  --gpu-type nvidia-l4 \
-  --max-instances 1 \
-  --memory 32Gi \
-  --allow-unauthenticated \
-  --no-cpu-throttling \
-  --no-gpu-zonal-redundancy \
-  --timeout=600
-
-
-## download ollama utility and test the Cloud Run GPU service that is created
-curl -fsSL https://ollama.com/install.sh
-OLLAMA_HOST=<Cloud Run SERVICE URL generated above> ollama run gemma3:4b
+python "adk agent/server.py"
 ```
 
-## Deploy ADK Cloud Run Agent that calls the Gemma Backend
+The agent will automatically load the environment variables from the `.env` file.
+
+## Deploy ADK Cloud Run Agent
 
 ```bash
 # go to the ADK agent directory
-cd hackathon-cloudrun/adk-agent
-
-export OLLAMA_URL=$(gcloud run services describe ollama-gemma3-4b-gpu \
-  --region us-central1 \
-  --format='value(status.url)')
+cd "adk agent"
 
 # Create environment file
-
 cat > .env << EOF
 GOOGLE_CLOUD_PROJECT=$PROJECT_ID
 GOOGLE_CLOUD_LOCATION=us-central1
-GEMMA_MODEL_NAME=gemma3:4b
-OLLAMA_API_BASE=$OLLAMA_URL
+PRO_MODEL=gemini-2.5-pro
+FLASH_MODEL=gemini-2.5-flash
+VEO_FAST_MODEL=veo-3.1-fast-generate-preview
+VEO_HQ_MODEL=veo-3.1-generate-preview
+GCS_BUCKET_NAME=your-gcs-bucket-name
 EOF
-
-# Deploy the ADK based AI agent to Cloud Run with ADK webUI 
-export PROJECT_ID="sanguinax-playground"
 
 # Build with correct project
 gcloud builds submit \
@@ -120,8 +83,8 @@ gcloud builds submit \
 
 # Deploy
 gcloud run deploy production-adk-agent \
-    --project sanguinax-playground \
-    --image gcr.io/sanguinax-playground/production-adk-agent \
+    --project $PROJECT_ID \
+    --image gcr.io/$PROJECT_ID/production-adk-agent \
     --region us-central1 \
     --allow-unauthenticated \
     --memory 4Gi \
@@ -129,7 +92,7 @@ gcloud run deploy production-adk-agent \
     --max-instances 1 \
     --concurrency 50 \
     --timeout 500 \
-    --set-env-vars GOOGLE_CLOUD_PROJECT=sanguinax-playground,GOOGLE_CLOUD_LOCATION=us-central1,GEMMA_MODEL_NAME=gemma3:4b,VEO_MODEL_NAME=veo-3.1-fast-generate-preview,OLLAMA_API_BASE=https://ollama-gemma3-4b-gpu-870622303377.us-central1.run.app,GCS_BUCKET_NAME=ai-veo-videos-us
+    --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=us-central1,PRO_MODEL=gemini-2.5-pro,FLASH_MODEL=gemini-2.5-flash,VEO_FAST_MODEL=veo-3.1-fast-generate-preview,VEO_HQ_MODEL=veo-3.1-generate-preview,GCS_BUCKET_NAME=your-gcs-bucket-name
 ```
 
 ## Test Your Agent's health
@@ -142,25 +105,40 @@ export SERVICE_URL=$(gcloud run services describe production-adk-agent \
 
 # Test health endpoint
 curl $SERVICE_URL/health
-
 ```
 
 ## 🎉 Test your Agent with the ADK WebUI
 
-Your production ADK agent is now running on Cloud Run with GPU acceleration!
+Your production ADK agent is now running on Cloud Run!
 
 Interact with your agent by entering the SERVICE_URL above for your production-adk-agent into a new browser tab. You should see the ADK web interface.
 
   ## Clean up
 Follow these steps to delete the resources you created in this lab to avoid incurring further charges.
 
-Examples of how to delete the two Cloud Run services that were deployed in this repo. You can also delete them in the Cloud Run Web Console page. 
-Please also remember to delete other Google Cloud resources you may have used. 
-
 ```bash
 #Delete the ADK agent Cloud Run service:
-gcloud run services delete production-adk-agent -region europe-west1
-# Delete the Gemma backend Cloud Run service: 
-gcloud run services delete ollama-gemma3-4b-gpu --region europe-west1
-
+gcloud run services delete production-adk-agent --region us-central1
 ```
+
+## Test locally the api end point
+
+curl -X POST http://127.0.0.1:8080/apps/production_agent/users/local_test_user/sessions/session-12345 \
+-H "Content-Type: application/json" \
+-d '{}'
+
+curl -X POST http://127.0.0.1:8080/run \
+-H "Content-Type: application/json" \
+-d '{
+    "app_name": "production_agent",
+    "user_id": "local_test_user",
+    "session_id": "session-12345",
+    "new_message": {
+        "parts": [
+            {
+                "text": "{\"prompt\": \"A test prompt from curl\", \"user\": \"curl_user\", \"quality\": \"normal\"}"
+            }
+        ],
+        "role": "user"
+    }
+}'

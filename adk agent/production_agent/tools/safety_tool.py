@@ -44,15 +44,13 @@ def check_prompt_safety(prompt_text: str) -> str:
             print("[Safety Tool] WARNING: API returned no categories.")
             return "SAFETY_API_FAILED"
 
-        # --- YOUR NEW 4-PASS LOGIC ---
-
         # Pass 1: Check for HIGHLY-CONFIDENT high-risk content
         for category in response.moderation_categories:
             if category.name.upper() in HIGH_RISK_CATEGORIES and category.confidence > 0.3:
                 print(f"[Safety Tool] Verdict: TOXIC (High-Risk Category: {category.name}, Conf: {category.confidence})")
                 return "TOXIC"
         
-        # Pass 2: NEW - Check for HIGHLY-CONFIDENT borderline content
+        # Pass 2:  Check for HIGHLY-CONFIDENT borderline content
         # (Your rule: > 0.8 on 'TOXIC', 'VIOLENT', etc. should be banned)
         for category in response.moderation_categories:
             if category.name.upper() in BORDERLINE_CATEGORIES and category.confidence > 0.8:
