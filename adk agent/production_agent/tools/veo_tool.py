@@ -43,11 +43,10 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
     client = genai.Client(project=project_id, location=location)
 
     # 2. Prepare GCS prefix
-    sanitized_prompt = re.sub(r'\W+', '_', final_prompt).lower()
     timestamp = int(time.time())
-    gcs_prefix = f"veo_output/{sanitized_prompt[:50]}_{timestamp}/" 
+    gcs_prefix = f"veo_temp/{timestamp}/" 
     output_gcs_uri_prefix = f"gs://{bucket_name}/{gcs_prefix}"
-    print(f"Configuring output to GCS prefix: {output_gcs_uri_prefix}")
+    print(f"Configuring temporary output to GCS prefix: {output_gcs_uri_prefix}")
 
     # 3. Start video generation
     print(f"Starting video generation job for: '{final_prompt}' (Quality: {quality})")
@@ -70,7 +69,7 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
 
     print("Operation finished. Accessing response...")
     
-    # --- Original error handling ---
+    # --- Error handling ---
     if not operation.result or not operation.result.generated_videos:
          error_details = "Unknown error or no videos generated (check safety filters)."
          if hasattr(operation, 'response') and operation.response:
@@ -87,25 +86,39 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
     final_video_gcs_uri = operation.result.generated_videos[0].video.uri
     print(f"  Successfully retrieved GCS URI: {final_video_gcs_uri}")
     
-    # --- 5. UPLOAD THE PROMPT FILE ---
+    # --- 5. MOVE VIDEO TO FINAL PATH AND UPLOAD PROMPT ---
     try:
-        print(f"Uploading prompt file to match video...")
+        print(f"Moving video and uploading prompt to final destination...")
         storage_client = storage.Client()
         gcs_bucket = storage_client.bucket(bucket_name)
+
+        # --- 5a. Create the new filename base ---
+        timestamp_str = time.strftime("%Y%m%d_%H%M%S", time.localtime(timestamp))
+        safe_quality = quality.lower().strip()
+        filename_base = f"{timestamp_str}_video_{safe_quality}"
         
-        video_filename = Path(final_video_gcs_uri).name
-        # Create a .prompt.txt file with the same name as the video
-        prompt_filename = video_filename.replace(".mp4", ".prompt.txt")
-        prompt_gcs_path = f"{gcs_prefix}{prompt_filename}"
+        # --- 5b. Define final paths (no sub-folder) ---
+        final_video_blob_name = f"veo_output/{filename_base}.mp4"
+        final_prompt_blob_name = f"veo_output/{filename_base}.prompt.txt"
         
-        prompt_blob = gcs_bucket.blob(prompt_gcs_path)
-        # Upload the "By JohnDoe: ..." message
-        prompt_blob.upload_from_string(display_message)
-        print(f"  Successfully uploaded prompt file: gs://{bucket_name}/{prompt_gcs_path}")
+        # --- 5c. Move the generated video ---
+        source_blob_name = final_video_gcs_uri.replace(f"gs://{bucket_name}/", "")
+        source_blob = gcs_bucket.blob(source_blob_name)
+
+        print(f"  Moving video from {source_blob_name} to {final_video_blob_name}")
+        gcs_bucket.rename_blob(source_blob, new_name=final_video_blob_name)
+        
+        # --- 5d. Upload the prompt file ---
+        print(f"  Uploading prompt file to: {final_prompt_blob_name}")
+        prompt_blob = gcs_bucket.blob(final_prompt_blob_name)
+        prompt_blob.upload_from_string(display_message, content_type="text/plain")
+
+        # --- 5e. Update the return URI ---
+        final_video_gcs_uri = f"gs://{bucket_name}/{final_video_blob_name}"
         
     except Exception as e:
-        print(f"  WARNING: Failed to upload prompt file. Error: {e}")
-        # Non-critical error, we still want to return the video URI
+        print(f"  WARNING: Failed to move video or upload prompt file. Error: {e}")
+        pass
     
     # 6. Return the video URI
     return final_video_gcs_uri

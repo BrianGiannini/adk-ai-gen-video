@@ -26,8 +26,8 @@ PRO_MODEL = os.getenv("PRO_MODEL", "gemini-2.5-pro")
 FLASH_MODEL = os.getenv("FLASH_MODEL", "gemini-2.5-flash") 
 
 # --- Import ALL our tools ---
-from production_agent.tools.mock_veo_tool import generate_video_and_prompt_file
-# from production_agent.tools.veo_tool import generate_video_and_prompt_file # <-- The REAL one
+#from production_agent.tools.mock_veo_tool import generate_video_and_prompt_file
+from production_agent.tools.veo_tool import generate_video_and_prompt_file # <-- The REAL one
 from production_agent.tools.safety_tool import check_prompt_safety
 
 # --- AGENT CHAIN ---
