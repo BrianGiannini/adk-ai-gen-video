@@ -86,7 +86,6 @@ gcloud run deploy production-adk-agent \
     --project $PROJECT_ID \
     --image gcr.io/$PROJECT_ID/production-adk-agent \
     --region us-central1 \
-    --allow-unauthenticated \
     --memory 4Gi \
     --cpu 2 \
     --max-instances 1 \

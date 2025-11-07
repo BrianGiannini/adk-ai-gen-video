@@ -18,7 +18,7 @@ os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
 
 logging_client = google_cloud_logging.Client()
-logger = logging_client.logger("production-adk-agent")
+logger = logging_client.logger("production-adk-agent-main")
 
 # --- Model Definitions ---
 load_dotenv()
@@ -26,8 +26,8 @@ PRO_MODEL = os.getenv("PRO_MODEL", "gemini-2.5-pro")
 FLASH_MODEL = os.getenv("FLASH_MODEL", "gemini-2.5-flash") 
 
 # --- Import ALL our tools ---
-#from production_agent.tools.mock_veo_tool import generate_video_and_prompt_file
-from production_agent.tools.veo_tool import generate_video_and_prompt_file # <-- The REAL one
+from production_agent.tools.mock_veo_tool import generate_video_and_prompt_file
+# from production_agent.tools.veo_tool import generate_video_and_prompt_file # <-- The REAL one
 from production_agent.tools.safety_tool import check_prompt_safety
 
 # --- AGENT CHAIN ---
@@ -60,7 +60,7 @@ safety_check_agent = Agent(
     tools=[check_prompt_safety],
 )
 
-# 2. Decision Agent (MODIFIED AS REQUESTED)
+# 2. Decision Agent
 decision_agent = Agent(
     model=LiteLlm(model=PRO_MODEL), 
     name="decision_agent",
@@ -120,7 +120,8 @@ confirmation_agent = Agent(
     model=LiteLlm(model=FLASH_MODEL),
     name="confirmation_agent",
     description="Formats the final confirmation message.",
-    instruction="""You will be given a GCS URI or an error message as input.
+    instruction="""
+    You will be given a GCS URI or an error message as input.
     If the input starts with 'gs://', your response MUST be in the following format:
     '''Task Complete: Video generation finished. The result is available at: [GCS_URI]'''
     (Replace [GS_URI] with the input URI).
