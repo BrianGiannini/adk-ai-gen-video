@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Video Generator</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+
+    <h1>Video Generation Admin</h1>
+
+    <div id="request-access-form">
+        <h2>Request Access</h2>
+        <p>Video generation is costly. To prevent abuse, access is not automatic. Please enter your email to be added to the waitlist.</p>
+        <p><strong>To be approved quickly, please send an email to brian.giannini.1@gmail.com.</strong></p>
+        <input type="email" id="email-input" placeholder="Your Google email address">
+        <button onclick="requestAccess()">Request Access</button>
+    </div>
+
+    <div id="google-signin-btn">
+        <h2>Sign In to Continue</h2>
+        <div id="g_id_signin" data-type="standard"></div>
+    </div>
+
+    <div id="pending-message" class="info">
+        <h3>Your access request is pending.</h3>
+        <p>To be approved faster, please send an email to <strong>brian.giannini.1@gmail.com</strong> so the admin can enable your account.</p>
+    </div>
+
+    <div id="not-found-message" class="info">
+        <h3>Your account is not on the invite list.</h3>
+        <p>Please use the "Request Access" form above, then email <strong>brian.giannini.1@gmail.com</strong> to be approved.</p>
+    </div>
+
+    <div id="app-content">
+        <h2>Generate a New Video (Fast Quality Only)</h2>
+        <textarea id="prompt-input" rows="4" placeholder="Enter your prompt..."></textarea>
+        <button id="generate-btn" onclick="submitPrompt()">Generate</button>
+    </div>
+
+    <div id="video-result">
+        <h2>Your Video</h2>
+        <video id="video-player" controls></video>
+        
+        <a id="download-link" href="#" download="generated_video.mp4" style="margin-top: 15px; text-align: center; font-size: 1.1em;">
+            Download Video
+        </a>
+        </div>
+
+    <div id="message" style="display: none;"></div>
+
+    <div id="hackathon-info" class="info">
+        <h2>Hackathon Demo Interface</h2>
+        <p>Welcome! This website was built specifically for the hackathon demo to allow for easy testing.</p>
+        
+        <h3>How This Demo Works (The "Admin" Flow)</h3>
+        <ol>
+            <li>You request access with your email (which the admin approves in Firestore).</li>
+            <li>You sign in with Google to verify your identity.</li>
+            <li>You write a prompt and click "Generate".</li>
+            <li>This site securely calls the private Google ADK agent (running on Cloud Run).</li>
+            <li>The agent generates the video and saves it to a private cloud storage folder.</li>
+            <li>This site creates a secure, temporary link and displays the video for you above.</li>
+        </ol>
+
+        <h3>The Real-World Production Flow (The "Stream" Flow)</h3>
+        <p>In the primary use case, this system is fully automated for a live YouTube stream:</p>
+        <ol>
+            <li>A viewer sends a donation on YouTube with a video prompt.</li>
+            <li><strong>Streamer.bot</strong> (on the streamer's PC) catches the donation.</li>
+            <li>Streamer.bot securely calls the <strong>exact same</strong> Cloud Run agent you are testing now.</li>
+            <li>The video is saved to a separate, private cloud folder.</li>
+            <li>A separate script on the streamer's PC downloads the new video.</li>
+            <li>The script plays the video, which is then captured by the <strong>OBS</strong> streaming software and broadcast live.</li>
+        </ol>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

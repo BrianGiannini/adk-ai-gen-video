@@ -1,0 +1,104 @@
+body { 
+    font-family: Arial, sans-serif; 
+    max-width: 600px; 
+    margin: 20px auto; 
+    padding: 10px; 
+    background-color: #f4f4f4; 
+}
+div { 
+    background: #fff; 
+    border-radius: 8px; 
+    padding: 20px; 
+    margin-bottom: 20px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+}
+h1, h2 { 
+    color: #333; 
+}
+
+/* This rule now applies to input, select, button, AND textarea */
+input, select, button, textarea { 
+    width: 100%; 
+    padding: 10px; 
+    margin-top: 10px; 
+    box-sizing: border-box; 
+    font-family: Arial, sans-serif; /* Match the rest of the page */
+    font-size: 1em; /* Match the rest of the page */
+}
+
+button { 
+    background-color: #007bff; 
+    color: white; 
+    border: none; 
+    cursor: pointer; 
+    font-size: 16px; 
+}
+button:disabled { 
+    background-color: #ccc; 
+}
+video { 
+    width: 100%; 
+    margin-top: 20px; 
+    border-radius: 8px; 
+}
+#message { 
+    padding: 10px; 
+    border-radius: 5px; 
+    margin-top: 10px; 
+}
+.success { 
+    background-color: #d4edda; 
+    color: #155724; 
+}
+.error { 
+    background-color: #f8d7da; 
+    color: #721c24; 
+}
+.info { 
+    background-color: #e2e3e5; 
+    color: #383d41; 
+}
+
+/* These sections are hidden by default */
+#google-signin-btn, #app-content, #pending-message, #not-found-message, #video-result { 
+    display: none; 
+}
+
+/* Style for the Google Sign-in button div */
+#google-signin-btn {
+    background: none;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 0;
+}
+
+/* Style for the hackathon info box */
+#hackathon-info h2 {
+    margin-top: 0;
+}
+#hackathon-info h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #333;
+}
+#hackathon-info p {
+    margin: 5px 0;
+    line-height: 1.4;
+}
+#hackathon-info ol {
+    padding-left: 25px; 
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+#hackathon-info li {
+    line-height: 1.5; 
+    margin-bottom: 8px;
+}
+
+/* --- THIS IS THE FIX --- */
+/* Hide the download link by default. 
+   script.js will show it when a video is ready. */
+#download-link {
+    display: none;
+}
+/* --- END FIX --- */

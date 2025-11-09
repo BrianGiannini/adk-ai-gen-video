@@ -9,6 +9,7 @@ export VEO_HQ_MODEL="veo-3.1-generate-preview"
 export PRO_MODEL="gemini-2.5-pro"
 export FLASH_MODEL="gemini-2.5-flash"
 
+
 # A variable for the container image name
 export IMAGE_TAG="gcr.io/$PROJECT_ID/production-adk-agent"
 

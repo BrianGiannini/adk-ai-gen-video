@@ -7,21 +7,20 @@ Let's first explore the agent we'll be deploying:
 #### Agent Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐
-│   User Request  │ -> │   ADK Agent     │
-│                 │    │  (Cloud Run)    │
-└─────────────────┘    └─────────────────┘
-                              │
-                              v
-                       ┌─────────────────┐
-                       │  Gemini API     │
-                       │                 │
-                       └─────────────────┘
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ Stream Donation │ -> │    Streambot    │ -> │   ADK Agent     │ -> │  Gemini API     │
+│                 │    │                 │    │  (Cloud Run)    │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
+
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   User Request  │ -> │  Admin Website  │ -> │   ADK Agent     │ -> │  Gemini API     │
+│                 │    │  (Cloud Run)    │    │  (Cloud Run)    │    │                 │
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 #### Key Components
 
-## Prerequisites 
+## Prerequisites
 
 ```bash
 # Set your Google Cloud project
@@ -65,33 +64,8 @@ The agent will automatically load the environment variables from the `.env` file
 # go to the ADK agent directory
 cd "adk agent"
 
-# Create environment file
-cat > .env << EOF
-GOOGLE_CLOUD_PROJECT=$PROJECT_ID
-GOOGLE_CLOUD_LOCATION=us-central1
-PRO_MODEL=gemini-2.5-pro
-FLASH_MODEL=gemini-2.5-flash
-VEO_FAST_MODEL=veo-3.1-fast-generate-preview
-VEO_HQ_MODEL=veo-3.1-generate-preview
-GCS_BUCKET_NAME=your-gcs-bucket-name
-EOF
-
-# Build with correct project
-gcloud builds submit \
-    --project $PROJECT_ID \
-    --tag gcr.io/$PROJECT_ID/production-adk-agent
-
-# Deploy
-gcloud run deploy production-adk-agent \
-    --project $PROJECT_ID \
-    --image gcr.io/$PROJECT_ID/production-adk-agent \
-    --region us-central1 \
-    --memory 4Gi \
-    --cpu 2 \
-    --max-instances 1 \
-    --concurrency 50 \
-    --timeout 500 \
-    --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=us-central1,PRO_MODEL=gemini-2.5-pro,FLASH_MODEL=gemini-2.5-flash,VEO_FAST_MODEL=veo-3.1-fast-generate-preview,VEO_HQ_MODEL=veo-3.1-generate-preview,GCS_BUCKET_NAME=your-gcs-bucket-name
+# run the deployment script
+./deploy_adk_agent.sh
 ```
 
 ## Test Your Agent's health
@@ -111,6 +85,38 @@ curl $SERVICE_URL/health
 Your production ADK agent is now running on Cloud Run!
 
 Interact with your agent by entering the SERVICE_URL above for your production-adk-agent into a new browser tab. You should see the ADK web interface.
+
+## Admin Website
+
+The admin website provides a simple interface to view the generated videos.
+
+### Run the Admin Website Locally
+
+```bash
+# Go to the admin_website directory
+cd admin_website
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set the Flask app
+export FLASK_APP=server.py
+
+# Run the server
+flask run
+```
+
+### Deploy the Admin Website
+
+This will deploy the admin website as a private service.
+
+```bash
+# Go to the admin_website directory
+cd admin_website
+
+# run the deployment script
+./deploy_admin_website.sh
+```
 
   ## Clean up
 Follow these steps to delete the resources you created in this lab to avoid incurring further charges.

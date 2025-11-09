@@ -26,8 +26,8 @@ PRO_MODEL = os.getenv("PRO_MODEL", "gemini-2.5-pro")
 FLASH_MODEL = os.getenv("FLASH_MODEL", "gemini-2.5-flash") 
 
 # --- Import ALL our tools ---
-from production_agent.tools.mock_veo_tool import generate_video_and_prompt_file
-# from production_agent.tools.veo_tool import generate_video_and_prompt_file # <-- The REAL one
+#from production_agent.tools.mock_veo_tool import generate_video_and_prompt_file
+from production_agent.tools.veo_tool import generate_video_and_prompt_file
 from production_agent.tools.safety_tool import check_prompt_safety
 
 # --- AGENT CHAIN ---
@@ -69,7 +69,7 @@ decision_agent = Agent(
     You will receive a JSON string containing "original_json_string" and "safety_verdict".
     
     1.  Parse this input JSON.
-    2.  Parse the "original_json_string" to get the `prompt`, `user`, and `quality`.
+    2.  Parse the "original_json_string" to get the `prompt`, `user`, `quality`, and `context`.
     3.  Read the "safety_verdict" and follow these 3 cases.
     
     CASE 1 (verdict is "TOXIC" or "SAFETY_API_FAILED"):
@@ -77,19 +77,19 @@ decision_agent = Agent(
       **impressive, funny, or visually spectacular** for an AI video model.
     - Do not create a boring prompt.
     - Return the final JSON in this format:
-      {"final_prompt": "[YOUR_NEW_IMPRESSIVE_PROMPT]", "display_message": "By [user] : prompt banned, replacement prompt here: [YOUR_NEW_IMPRESSIVE_PROMPT]", "quality": "[quality]"}
+      {"final_prompt": "[YOUR_NEW_IMPRESSIVE_PROMPT]", "display_message": "By [user] : prompt banned, replacement prompt here: [YOUR_NEW_IMPRESSIVE_PROMPT]", "quality": "[quality]", "context": "[context]"}
 
     CASE 2 (verdict is "BORDERLINE"):
     - Rewrite the original `prompt` to be completely family-friendly.
     - Return the final JSON in this format:
-      {"final_prompt": "[rewritten_prompt]", "display_message": "By [user] (censored) : [rewritten_prompt]", "quality": "[quality]"}
+      {"final_prompt": "[rewritten_prompt]", "display_message": "By [user] (censored) : [rewritten_prompt]", "quality": "[quality]", "context": "[context]"}
       
     CASE 3 (verdict is "SAFE"):
     - Use the original `prompt`.
     - Return the final JSON in this format:
-      {"final_prompt": "[original_prompt]", "display_message": "By [user] : [original_prompt]", "quality": "[quality]"}
+      {"final_prompt": "[original_prompt]", "display_message": "By [user] : [original_prompt]", "quality": "[quality]", "context": "[context]"}
     
-    (Use the `user` and `quality` values from the parsed "original_json_string").
+    (Use the `user`, `quality`, and `context` values from the parsed "original_json_string").
     """,
     tools=[],
 )
@@ -105,7 +105,7 @@ video_worker_agent = Agent(
 
     RULE 1: If your input is a JSON string (starting with '{"final_prompt":'):
     - Your job is to call the `generate_video_and_prompt_file` tool using the
-      'final_prompt', 'display_message', and 'quality' arguments from that JSON.
+      'final_prompt', 'display_message', 'quality', and 'context' arguments from that JSON.
     
     RULE 2: If your input is a tool output string (starting with 'gs://' or 'Video generation failed:'):
     - This is your final step.
