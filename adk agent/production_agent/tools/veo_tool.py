@@ -47,7 +47,7 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
     # 1. Configure genai client
     client = genai.Client(project=project_id, location=location)
 
-    # --- 2. PREPARE GCS PATHS (NEW LOGIC) ---
+    # --- 2. PREPARE GCS PATHS ---
     timestamp = int(time.time())
     
     # Logic to decide the output folder
@@ -62,7 +62,6 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
     gcs_prefix = f"{output_folder_prefix}_temp/{timestamp}/" 
     output_gcs_uri_prefix = f"gs://{bucket_name}/{gcs_prefix}"
     logger.log_text(f"Configuring temporary output to GCS prefix: {output_gcs_uri_prefix}", severity="INFO")
-    # --- END NEW LOGIC ---
 
     # 3. Start video generation
     logger.log_text(f"Starting video generation job for: '{final_prompt}' (Quality: {quality})", severity="INFO")

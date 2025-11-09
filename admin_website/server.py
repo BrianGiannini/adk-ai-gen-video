@@ -12,18 +12,12 @@ from google.oauth2 import id_token
 import httpx
 from fastapi.staticfiles import StaticFiles
 import json 
-import asyncio # <-- ADD THIS IMPORT
-
-# --- ADD THESE IMPORTS ---
+import asyncio
 from google.auth.transport.requests import Request as GAuthRequest
 from google.auth import impersonated_credentials
-# --- END IMPORTS ---
 
-# --- Configuration ---
 
-# --- THIS IS NOW v2.10 ---
 HARDCODED_APP_VERSION = "v2.10-cold-start-retry"
-# ---
 
 VEO_SERVICE_URL_FROM_ENV = os.environ.get("VEO_SERVICE_URL")
 DATABASE_ID = os.environ.get("FIRESTORE_DATABASE_ID")
@@ -46,7 +40,7 @@ app = FastAPI()
 # This will print to your Cloud Run logs as soon as the container starts
 print(f"\n" + "="*50)
 print(f"🚀 ADMIN WEBSITE SERVER IS STARTING")
-print(f"🚀 VERSION: {HARDCODED_APP_VERSION}")
+print(f"🚀 VERSION: v2.10-cold-start-retry")
 if SERVICE_ACCOUNT_EMAIL:
     print(f"🚀 Signing URLs as: {SERVICE_ACCOUNT_EMAIL}")
 else:
@@ -256,10 +250,9 @@ async def submit_prompt(request: Request, prompt_data: PromptRequest):
         "Content-Type": "application/json"
     }
 
-    # --- THIS IS THE FIX (RETRY LOGIC) ---
     MAX_RETRIES = 3
     RETRY_DELAY_SECONDS = 5
-    SESSION_TIMEOUT_SECONDS = 30 # Give each attempt 30s
+    SESSION_TIMEOUT_SECONDS = 30 
 
     try:
         # --- PRE-WARM / SESSION CREATE CALL (with retry) ---
@@ -310,7 +303,6 @@ async def submit_prompt(request: Request, prompt_data: PromptRequest):
     except Exception as e:
         print(f"ERROR: Exception while calling Veo service: {e}")
         return JSONResponse({"error": f"Error calling Veo service: {e}"}, status_code=500)
-    # --- END OF FIX ---
 
 
     # 4. Increment the User's Count in Firestore

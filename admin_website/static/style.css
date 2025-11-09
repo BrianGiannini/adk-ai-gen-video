@@ -16,14 +16,13 @@ h1, h2 {
     color: #333; 
 }
 
-/* This rule now applies to input, select, button, AND textarea */
 input, select, button, textarea { 
     width: 100%; 
     padding: 10px; 
     margin-top: 10px; 
     box-sizing: border-box; 
-    font-family: Arial, sans-serif; /* Match the rest of the page */
-    font-size: 1em; /* Match the rest of the page */
+    font-family: Arial, sans-serif;
+    font-size: 1em;
 }
 
 button { 
@@ -95,10 +94,7 @@ video {
     margin-bottom: 8px;
 }
 
-/* --- THIS IS THE FIX --- */
-/* Hide the download link by default. 
-   script.js will show it when a video is ready. */
+/* Hide the download link by default. */
 #download-link {
     display: none;
 }
-/* --- END FIX --- */

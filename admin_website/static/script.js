@@ -129,9 +129,7 @@ async function submitPrompt() {
         videoPlayer.src = data.video_url;
         downloadLink.href = data.video_url;
 
-        // --- FIX: SAVE TO SESSION STORAGE ---
         sessionStorage.setItem("lastVideoUrl", data.video_url);
-        // --- END FIX ---
 
         // Show the download link
         downloadLink.style.display = "block";
@@ -179,7 +177,6 @@ function updateUI(state) {
         document.getElementById("app-content").style.display = "block";
         document.getElementById("video-result").style.display = "block";
         
-        // --- FIX: CHECK SESSION STORAGE ON LOAD ---
         const lastUrl = sessionStorage.getItem("lastVideoUrl");
         if (lastUrl) {
             const videoPlayer = document.getElementById("video-player");
@@ -191,7 +188,6 @@ function updateUI(state) {
             videoPlayer.load();
             downloadLink.style.display = "block";
         }
-        // --- END FIX ---
         
     } else if (state === 'not_found') {
         // Logged in, but not in our database

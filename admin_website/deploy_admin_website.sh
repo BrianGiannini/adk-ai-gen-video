@@ -19,7 +19,7 @@ gcloud builds submit \
     --project $PROJECT_ID \
     --tag $IMAGE_TAG
 
-# 3. Deploy to Cloud Run (UPDATED)
+# 3. Deploy to Cloud Run
 # This now uses all your variables and has the correct env var names
 echo "--- Deploying to Cloud Run... ---"
 gcloud run deploy admin-website \
