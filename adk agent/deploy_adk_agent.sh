@@ -1,33 +1,32 @@
 #!/bin/bash
-# 1. Export your variables
+# 1. Export variables
 
-export PROJECT_ID="sanguinax-playground"
+export PROJECT_ID="live-video-generation-tv"
 export REGION="us-central1"
-export GCS_BUCKET_NAME="ai-veo-videos-us"
+export GCS_BUCKET_NAME="ai-veo-videos-us-storage"
 export VEO_FAST_MODEL="veo-3.1-fast-generate-preview"
 export VEO_HQ_MODEL="veo-3.1-generate-preview"
 export PRO_MODEL="gemini-2.5-pro"
-export FLASH_MODEL="gemini-2.5-flash"
+export FLASH_MODEL="gemini-2.5-flash"                                                                                                                                                                          
+export SERVICE_NAME="hackathon-adk-agent"
 
 
-# A variable for the container image name
-export IMAGE_TAG="gcr.io/$PROJECT_ID/production-adk-agent"
-
-
-# 2. Submit the build (uses $PROJECT_ID and $IMAGE_TAG)
-echo "--- Building container... ---"
-gcloud builds submit \
-    --project $PROJECT_ID \
-    --tag $IMAGE_TAG
-
-# 3. Deploy to Cloud Run (UPDATED)
-# This now uses all your variables and has the correct env var names
-echo "--- Deploying to Cloud Run... ---"
-gcloud run deploy production-adk-agent \
-    --project $PROJECT_ID \
+# A variable for the container image name                                                                                                                                                                      
+export IMAGE_TAG="gcr.io/$PROJECT_ID/$SERVICE_NAME"                                                                                                                                                      
+                                                                                                                                                                                                               
+                                                                                                                                                                                                               
+# 2. Submit the build (uses $PROJECT_ID and $IMAGE_TAG)                                                                                                                                                        
+echo "--- Building container... ---"                                                                                                                                                                           
+gcloud builds submit \                                                                                                                                                                                         
+    --project $PROJECT_ID \                                                                                                                                                                                    
+    --tag $IMAGE_TAG                                                                                                                                                                                           
+                                                                                                                                                                                                               
+# 3. Deploy to Cloud Run                                                                                                                                                                                   
+echo "--- Deploying to Cloud Run... ---"                                                                                                                                                                       
+gcloud run deploy $SERVICE_NAME \    --project $PROJECT_ID \
     --image $IMAGE_TAG \
     --region $REGION \
-    --allow-unauthenticated \
+    --no-allow-unauthenticated \
     --memory 4Gi \
     --cpu 2 \
     --max-instances 1 \

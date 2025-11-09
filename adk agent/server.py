@@ -2,8 +2,7 @@ import os
 import sys
 from typing import Literal
 
-# This fixes the 'from agent...' and 'from production_agent...' import errors
-# It adds the current directory to the Python path
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if SCRIPT_DIR not in sys.path:
     sys.path.append(SCRIPT_DIR)

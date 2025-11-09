@@ -17,7 +17,7 @@ from google.auth.transport.requests import Request as GAuthRequest
 from google.auth import impersonated_credentials
 
 
-HARDCODED_APP_VERSION = "v2.10-cold-start-retry"
+HARDCODED_APP_VERSION = "v2.2 hackathon verrsion"
 
 VEO_SERVICE_URL_FROM_ENV = os.environ.get("VEO_SERVICE_URL")
 DATABASE_ID = os.environ.get("FIRESTORE_DATABASE_ID")
@@ -40,7 +40,7 @@ app = FastAPI()
 # This will print to your Cloud Run logs as soon as the container starts
 print(f"\n" + "="*50)
 print(f"🚀 ADMIN WEBSITE SERVER IS STARTING")
-print(f"🚀 VERSION: v2.10-cold-start-retry")
+print(f"🚀 VERSION: {HARDCODED_APP_VERSION}")
 if SERVICE_ACCOUNT_EMAIL:
     print(f"🚀 Signing URLs as: {SERVICE_ACCOUNT_EMAIL}")
 else:

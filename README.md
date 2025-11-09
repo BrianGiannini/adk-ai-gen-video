@@ -23,6 +23,9 @@ Let's first explore the agent we'll be deploying:
 ## Prerequisites
 
 ```bash
+# Authenticate with Google Cloud
+gcloud auth login
+
 # Set your Google Cloud project
 export PROJECT_ID="your-project-id"
 gcloud config set project $PROJECT_ID
@@ -68,14 +71,14 @@ cd "adk agent"
 ./deploy_adk_agent.sh
 ```
 
-## Test Your Agent's health
+## Test Your Agent's health (need to upload your agent in allow unauthenticated)
 
 ```bash
-# Get service URL
-export SERVICE_URL=$(gcloud run services describe production-adk-agent \
+# Get service URL                                                                                                                                                                                              
+export ADK_AGENT_SERVICE_NAME="hackathon-adk-agent"
+export SERVICE_URL=$(gcloud run services describe $ADK_AGENT_SERVICE_NAME \
     --region=us-central1 \
     --format='value(status.url)')
-
 # Test health endpoint
 curl $SERVICE_URL/health
 ```
@@ -84,7 +87,7 @@ curl $SERVICE_URL/health
 
 Your production ADK agent is now running on Cloud Run!
 
-Interact with your agent by entering the SERVICE_URL above for your production-adk-agent into a new browser tab. You should see the ADK web interface.
+Interact with your agent by entering the SERVICE_URL above for your $ADK_AGENT_SERVICE_NAME into a new browser tab. You should see the ADK web interface.
 
 ## Admin Website
 
@@ -108,6 +111,7 @@ flask run
 
 ### Deploy the Admin Website
 
+
 This will deploy the admin website as a private service.
 
 ```bash
@@ -122,9 +126,8 @@ cd admin_website
 Follow these steps to delete the resources you created in this lab to avoid incurring further charges.
 
 ```bash
-#Delete the ADK agent Cloud Run service:
-gcloud run services delete production-adk-agent --region us-central1
-```
+#Delete the ADK agent Cloud Run service:                                                                                                                                                                       
+gcloud run services delete $ADK_AGENT_SERVICE_NAME --region us-central1```
 
 ## Test locally the api end point
 

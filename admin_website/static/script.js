@@ -4,7 +4,7 @@ let currentGoogleToken = null;
 // --- 1. Google Sign-In Initialization ---
 window.onload = function() {
     
-    const GOOGLE_CLIENT_ID = "870622303377-74qpe5nm6gqtn2hh7r7h11jbmu352o8p.apps.googleusercontent.com";
+    const GOOGLE_CLIENT_ID = "362118722455-e2qv32anp5nhg0kt99ckmtg1ltd7p2a2.apps.googleusercontent.com";
 
     google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
