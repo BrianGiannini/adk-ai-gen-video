@@ -61,6 +61,30 @@ python "adk agent/server.py"
 
 The agent will automatically load the environment variables from the `.env` file.
 
+### Test Local Agent API Endpoints
+
+```bash
+curl -X POST http://127.0.0.1:8080/apps/production_agent/users/local_test_user/sessions/session-12345 \
+-H "Content-Type: application/json" \
+-d '{}'
+
+curl -X POST http://172.17.0.1:8080/run \
+-H "Content-Type: application/json" \
+-d '{
+    "app_name": "production_agent",
+    "user_id": "local_test_user",
+    "session_id": "session-12345",
+    "new_message": {
+        "parts": [
+            {
+                "text": "{\"prompt\": \"A test prompt from curl\", \"user\": \"curl_user\", \"quality\": \"normal\"}"
+            }
+        ],
+        "role": "user"
+    }
+}'
+```
+
 ## Deploy ADK Cloud Run Agent
 
 ```bash
@@ -128,25 +152,3 @@ Follow these steps to delete the resources you created in this lab to avoid incu
 ```bash
 #Delete the ADK agent Cloud Run service:                                                                                                                                                                       
 gcloud run services delete $ADK_AGENT_SERVICE_NAME --region us-central1```
-
-## Test locally the api end point
-
-curl -X POST http://127.0.0.1:8080/apps/production_agent/users/local_test_user/sessions/session-12345 \
--H "Content-Type: application/json" \
--d '{}'
-
-curl -X POST http://127.0.0.1:8080/run \
--H "Content-Type: application/json" \
--d '{
-    "app_name": "production_agent",
-    "user_id": "local_test_user",
-    "session_id": "session-12345",
-    "new_message": {
-        "parts": [
-            {
-                "text": "{\"prompt\": \"A test prompt from curl\", \"user\": \"curl_user\", \"quality\": \"normal\"}"
-            }
-        ],
-        "role": "user"
-    }
-}'
