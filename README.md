@@ -45,11 +45,12 @@ Create a `.env` file in the `adk agent` directory and add the following variable
 
 ```
 GOOGLE_CLOUD_PROJECT="your-project-id"
-GOOGLE_CLOUD_LOCATION="us-central1"
-PRO_MODEL="gemini-2.5-pro"
-FLASH_MODEL="gemini-2.5-flash"
-VEO_FAST_MODEL="veo-3.1-fast-generate-preview"
-VEO_HQ_MODEL="veo-3.1-generate-preview"
+GOOGLE_CLOUD_LOCATION="global"
+VEO_LOCATION="us-central1"
+PRO_MODEL="gemini-3.1-pro-preview"
+FLASH_MODEL="gemini-3.8-flash"
+VEO_FAST_MODEL="veo-3.1-fast-generate-001"
+VEO_HQ_MODEL="veo-3.1-generate-001"
 GCS_BUCKET_NAME="your-gcs-bucket-name"
 ```
 

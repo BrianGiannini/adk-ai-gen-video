@@ -4,7 +4,6 @@ from typing import Dict, Any
 import json
 from dotenv import load_dotenv
 from google.adk.agents import Agent, SequentialAgent
-from google.adk.models.lite_llm import LiteLlm
 from google.cloud import logging as google_cloud_logging
 import google.auth
 
@@ -15,15 +14,16 @@ try:
 except Exception:
     pass
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
-os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
+# Gemini 3 models are only served from the global endpoint (Veo uses VEO_LOCATION)
+os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "global")
 
 logging_client = google_cloud_logging.Client()
 logger = logging_client.logger("production-adk-agent-main")
 
 # --- Model Definitions ---
 load_dotenv()
-PRO_MODEL = os.getenv("PRO_MODEL", "gemini-2.5-pro")
-FLASH_MODEL = os.getenv("FLASH_MODEL", "gemini-2.5-flash") 
+PRO_MODEL = os.getenv("PRO_MODEL", "gemini-3.1-pro-preview")
+FLASH_MODEL = os.getenv("FLASH_MODEL", "gemini-3.8-flash") 
 
 # --- Import ALL our tools ---
 #from production_agent.tools.mock_veo_tool import generate_video_and_prompt_file
@@ -34,7 +34,7 @@ from production_agent.tools.safety_tool import check_prompt_safety
 
 # 1. Safety Check Agent
 safety_check_agent = Agent(
-    model=LiteLlm(model=FLASH_MODEL),
+    model=FLASH_MODEL,
     name="safety_check_agent",
     description="Calls the safety tool to classify a prompt.",
     instruction="""
@@ -62,7 +62,7 @@ safety_check_agent = Agent(
 
 # 2. Decision Agent
 decision_agent = Agent(
-    model=LiteLlm(model=PRO_MODEL), 
+    model=PRO_MODEL, 
     name="decision_agent",
     description="Makes a decision based on the safety verdict.",
     instruction="""
@@ -96,7 +96,7 @@ decision_agent = Agent(
 
 # 3. Worker Agent
 video_worker_agent = Agent(
-    model=LiteLlm(model=FLASH_MODEL),
+    model=FLASH_MODEL,
     name="video_worker_agent",
     description="Calls the video generation tool.",
     instruction="""
@@ -117,7 +117,7 @@ video_worker_agent = Agent(
 
 # 4. Confirmation Agent
 confirmation_agent = Agent(
-    model=LiteLlm(model=FLASH_MODEL),
+    model=FLASH_MODEL,
     name="confirmation_agent",
     description="Formats the final confirmation message.",
     instruction="""

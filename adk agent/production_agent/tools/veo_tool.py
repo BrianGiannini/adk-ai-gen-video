@@ -7,6 +7,8 @@ from google.genai import types
 from google.cloud import storage
 from pathlib import Path
 import google.cloud.logging
+from google.adk.tools import ToolContext
+from production_agent.tools.usage_guard import reserve_video_slot
 
 client = google.cloud.logging.Client()
 logger = client.logger("production-adk-agent-veo-tool")
@@ -14,7 +16,7 @@ logger = client.logger("production-adk-agent-veo-tool")
 # --- Environment Variables ---
 # VEO_FAST_MODEL, VEO_HQ_MODEL, and GCS_BUCKET_NAME are expected.
 
-def generate_video_and_prompt_file(final_prompt: str, display_message: str, quality: str, context: str) -> str:
+def generate_video_and_prompt_file(final_prompt: str, display_message: str, quality: str, context: str, tool_context: ToolContext) -> str:
     """
     Generates a video AND uploads a corresponding .prompt.txt file.
     
@@ -28,21 +30,27 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
         The GCS URI of the generated video.
     """
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
-    location = os.environ.get("GOOGLE_CLOUD_LOCATION")
+    location = os.environ.get("VEO_LOCATION", "us-central1")
     
     if quality == "fast":
-        model_name = os.getenv("VEO_FAST_MODEL", "veo-3.1-fast-generate-preview")
+        model_name = os.getenv("VEO_FAST_MODEL", "veo-3.1-fast-generate-001")
     else:
-        model_name = os.getenv("VEO_HQ_MODEL", "veo-3.1-generate-preview")
+        model_name = os.getenv("VEO_HQ_MODEL", "veo-3.1-generate-001")
         
     bucket_name = os.environ.get("GCS_BUCKET_NAME")
     
     if not all([project_id, location, bucket_name]):
         raise EnvironmentError(
             "Missing required environment variables. "
-            "Ensure GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, "
+            "Ensure GOOGLE_CLOUD_PROJECT, VEO_LOCATION, "
             "and GCS_BUCKET_NAME are set."
         )
+
+    # Spending safeguard: must pass before any paid Veo call
+    refusal = reserve_video_slot(tool_context.invocation_id)
+    if refusal:
+        logger.log_text(f"Video generation refused: {refusal}", severity="WARNING")
+        return f"Video generation failed: {refusal}"
 
     # 1. Configure genai client
     client = genai.Client(project=project_id, location=location)
@@ -72,6 +80,7 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
             output_gcs_uri=output_gcs_uri_prefix, 
             number_of_videos=1,
             aspect_ratio="16:9",
+            duration_seconds=int(os.getenv("VIDEO_DURATION_SECONDS", "8")),
         )
     )
 
@@ -88,7 +97,7 @@ def generate_video_and_prompt_file(final_prompt: str, display_message: str, qual
     if not operation.result or not operation.result.generated_videos:
          error_details = "Unknown error or no videos generated (check safety filters)."
          if hasattr(operation, 'response') and operation.response:
-             if hasattr(operation.response, 'error') and operation.DEPRECATED_yellow_error:
+             if hasattr(operation.response, 'error') and operation.response.error:
                  error_details = f"Operation error: {operation.response.error}"
              elif hasattr(operation.response, 'status') and operation.response.status:
                   error_details = f"Operation status: {operation.response.status}"

@@ -70,6 +70,18 @@ class StatusRequest(BaseModel):
     idToken: str
 
 
+# --- Helper to Reserve a Generation Atomically ---
+# Counting *before* the call (in a transaction) stops parallel requests
+# from all passing the limit check while earlier videos are still generating.
+@firestore.transactional
+def reserve_generation(transaction, user_doc_ref) -> bool:
+    user_data = user_doc_ref.get(transaction=transaction).to_dict() or {}
+    if user_data.get("generation_count", 0) >= user_data.get("max_uses", 3):
+        return False
+    transaction.update(user_doc_ref, {"generation_count": firestore.Increment(1)})
+    return True
+
+
 # --- Helper Function to Verify Google ID Token ---
 
 async def verify_google_token(token: str) -> dict | None:
@@ -188,11 +200,11 @@ async def submit_prompt(request: Request, prompt_data: PromptRequest):
             print(f"ERROR: User not approved: {email}")
             return JSONResponse({"error": "Your account is not yet approved."}, status_code=403)
 
-        if user_data.get("generation_count", 0) >= user_data.get("max_uses", 3):
+        if not reserve_generation(db.transaction(), user_doc_ref):
             print(f"ERROR: User has no generations left: {email}")
             return JSONResponse({"error": "You have used all your generations."}, status_code=429)
         
-        print(f"User {email} authorized. Generation count: {user_data.get('generation_count', 0)}")
+        print(f"User {email} authorized. Generation reserved (count before: {user_data.get('generation_count', 0)})")
     
     except Exception as e:
         print(f"ERROR during Firestore check: {e}")
@@ -305,14 +317,7 @@ async def submit_prompt(request: Request, prompt_data: PromptRequest):
         return JSONResponse({"error": f"Error calling Veo service: {e}"}, status_code=500)
 
 
-    # 4. Increment the User's Count in Firestore
-    try:
-        user_doc_ref.update({"generation_count": firestore.Increment(1)})
-        print(f"Incremented generation count for {email}")
-    except Exception as e:
-        print(f"CRITICAL: Failed to increment count for {email}: {e}")
-    
-    # 5. Create a Signed URL for the Video
+    # 4. Create a Signed URL for the Video
     try:
         veo_response_data_list = response.json()
         print(f"Received full response list from Veo service. Count: {len(veo_response_data_list)}")

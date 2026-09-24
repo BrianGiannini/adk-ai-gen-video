@@ -5,7 +5,7 @@ import google.cloud.logging
 client = google.cloud.logging.Client()
 logger = client.logger("production-adk-agent-veo-tool")
 
-def generate_video_and_prompt_file(final_prompt: str, display_message: str, quality: str) -> str:
+def generate_video_and_prompt_file(final_prompt: str, display_message: str, quality: str, context: str) -> str:
     """
     MOCK/SIMULATED version of the Veo tool.
     
