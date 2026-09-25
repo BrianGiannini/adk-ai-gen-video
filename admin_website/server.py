@@ -23,6 +23,8 @@ VEO_SERVICE_URL_FROM_ENV = os.environ.get("VEO_SERVICE_URL")
 DATABASE_ID = os.environ.get("FIRESTORE_DATABASE_ID")
 
 SERVICE_ACCOUNT_EMAIL = os.environ.get("SERVICE_ACCOUNT_EMAIL")
+# Must match GOOGLE_CLIENT_ID in static/script.js: only tokens issued for this app are accepted
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "362118722455-e2qv32anp5nhg0kt99ckmtg1ltd7p2a2.apps.googleusercontent.com")
 
 
 # Clean the URL to be robust
@@ -88,7 +90,7 @@ async def verify_google_token(token: str) -> dict | None:
     """Verifies a Google ID token and returns the user's info."""
     try:
         request = google.auth.transport.requests.Request()
-        token_info = id_token.verify_oauth2_token(token, request)
+        token_info = id_token.verify_oauth2_token(token, request, audience=GOOGLE_CLIENT_ID)
         return token_info
     except Exception as e:
         print(f"Token verification failed: {e}")
